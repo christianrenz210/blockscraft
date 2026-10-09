@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#000000">
+  <title>BlocksCraft</title>
+  <link rel="stylesheet" href="style.css">
+  <script type="importmap">
+    { "imports": { "three": "./lib/three.module.min.js" } }
+  </script>
+</head>
+<body>
+  <canvas id="game"></canvas>
+
+  <!-- In-game HUD -->
+  <div id="hud" class="hidden">
+    <div id="underwater"></div>
+    <div id="crosshair"></div>
+    <div id="debug" class="hidden"></div>
+    <div id="toast"></div>
+    <div id="block-name"></div>
+    <div id="hotbar-wrap">
+      <div id="hotbar"></div>
+      <button id="btn-inv" class="slot inv-slot" aria-label="Inventory">&#8943;</button>
+    </div>
+  </div>
+
+  <!-- Touch controls (phones/tablets) -->
+  <div id="touch" class="hidden">
+    <div id="look-zone"></div>
+    <div id="joystick"><div id="stick"></div></div>
+    <button id="btn-pause" class="tbtn small" aria-label="Pause">&#10074;&#10074;</button>
+    <button id="btn-fly" class="tbtn small" aria-label="Fly">FLY</button>
+    <button id="btn-break" class="tbtn" aria-label="Break">&#9935;</button>
+    <button id="btn-place" class="tbtn" aria-label="Place"><span id="place-icon"></span></button>
+    <button id="btn-jump" class="tbtn" aria-label="Jump">&#9650;</button>
+    <button id="btn-down" class="tbtn hidden" aria-label="Down">&#9660;</button>
+  </div>
+
+  <!-- Title screen -->
+  <div id="menu" class="screen dirt">
+    <h1 class="logo">Blocks<span>Craft</span></h1>
+    <p class="tagline" id="tagline">Build anything!</p>
+    <div class="menu-buttons">
+      <button id="btn-continue" class="mbtn">Continue World</button>
+      <button id="btn-new" class="mbtn">New World</button>
+      <button id="btn-settings" class="mbtn">Settings</button>
+      <button id="btn-help" class="mbtn">How to Play</button>
+    </div>
+    <div class="footer">BlocksCraft v1.0</div>
+  </div>
+
+  <!-- New world -->
+  <div id="new-world" class="screen dirt hidden">
+    <h2>Create New World</h2>
+    <label class="field">World Seed (optional)
+      <input id="seed-input" type="text" maxlength="32" placeholder="Leave blank for random" autocomplete="off">
+    </label>
+    <p class="warn hidden" id="overwrite-warn">This will replace your current world!</p>
+    <div class="menu-buttons">
+      <button id="btn-create" class="mbtn">Create World</button>
+      <button id="btn-new-back" class="mbtn">Back</button>
+    </div>
+  </div>
+
+  <!-- Settings -->
+  <div id="settings" class="screen dirt hidden">
+    <h2>Settings</h2>
+    <div class="settings-list">
+      <label class="field">Render Distance: <b id="rd-val"></b>
+        <input id="set-rd" type="range" min="2" max="10" step="1">
+      </label>
+      <label class="field">Look Sensitivity: <b id="sens-val"></b>
+        <input id="set-sens" type="range" min="0.2" max="3" step="0.1">
+      </label>
+      <label class="check"><input id="set-autojump" type="checkbox"> Auto-jump</label>
+      <label class="check"><input id="set-hires" type="checkbox"> High resolution (slower)</label>
+      <label class="check"><input id="set-sound" type="checkbox"> Sound</label>
+      <label class="check"><input id="set-fps" type="checkbox"> Show FPS / position</label>
+    </div>
+    <div class="menu-buttons">
+      <button id="btn-settings-done" class="mbtn">Done</button>
+    </div>
+  </div>
+
+  <!-- How to play -->
+  <div id="help" class="screen dirt hidden">
+    <h2>How to Play</h2>
+    <div class="help-cols">
+      <div>
+        <h3>Phone</h3>
+        <ul>
+          <li>Left stick: walk (push all the way to run)</li>
+          <li>Drag right side: look around</li>
+          <li>Tap screen / &#9632; button: place block</li>
+          <li>Hold screen / &#9935; button: break block</li>
+          <li>&#9650;: jump / swim / fly up</li>
+          <li>FLY: toggle flying</li>
+          <li>&#8943;: choose blocks</li>
+        </ul>
+      </div>
+      <div>
+        <h3>Computer</h3>
+        <ul>
+          <li>WASD: walk &middot; Ctrl: run</li>
+          <li>Mouse: look &middot; Space: jump</li>
+          <li>Left click: break &middot; Right click: place</li>
+          <li>Middle click: pick block</li>
+          <li>1-9 / wheel: select &middot; E: blocks</li>
+          <li>F or double Space: fly &middot; Shift: fly down</li>
+          <li>Esc: pause &middot; F3: debug info</li>
+        </ul>
+      </div>
+    </div>
+    <div class="menu-buttons">
+      <button id="btn-help-back" class="mbtn">Back</button>
+    </div>
+  </div>
+
+  <!-- Pause -->
+  <div id="pause" class="screen dim hidden">
+    <h2>Game Paused</h2>
+    <div class="menu-buttons">
+      <button id="btn-resume" class="mbtn">Back to Game</button>
+      <button id="btn-pause-settings" class="mbtn">Settings</button>
+      <button id="btn-quit" class="mbtn">Save &amp; Quit to Title</button>
+    </div>
+  </div>
+
+  <!-- Inventory -->
+  <div id="inventory" class="screen dim hidden">
+    <div class="inv-panel">
+      <div class="inv-head">
+        <span>Blocks</span>
+        <button id="btn-inv-close" class="xbtn" aria-label="Close">&#10005;</button>
+      </div>
+      <div id="inv-grid"></div>
+      <div class="inv-hint">Pick a hotbar slot below, then tap a block to put it there.</div>
+      <div id="inv-hotbar"></div>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div id="loading" class="screen dirt hidden">
+    <h2 id="loading-text">Generating world...</h2>
+    <div class="bar"><div id="loading-bar"></div></div>
+  </div>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>

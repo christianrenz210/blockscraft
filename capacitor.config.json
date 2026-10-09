@@ -1,0 +1,8 @@
+{
+  "appId": "com.blockscraft.game",
+  "appName": "BlocksCraft",
+  "webDir": "www",
+  "android": {
+    "backgroundColor": "#000000"
+  }
+}
