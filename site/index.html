@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>BlocksCraft — Free Blocky Sandbox Game for Android &amp; Browser</title>
+  <meta name="description" content="BlocksCraft is a free 3D block-building sandbox game. Explore endless worlds, build anything, and play on Android or right in your browser.">
+  <meta name="theme-color" content="#14171f">
+  <meta property="og:title" content="BlocksCraft — Build. Explore. Create.">
+  <meta property="og:description" content="A free blocky 3D sandbox game. Download the Android APK or play in your browser.">
+  <meta property="og:image" content="https://blockscraft.vercel.app/screenshots/house.jpg">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" type="image/png" href="icon-32.png">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="site.css">
+</head>
+<body>
+  <header class="nav">
+    <a class="brand" href="#top">
+      <img src="icon-192.png" alt="" width="32" height="32">
+      <span>BlocksCraft</span>
+    </a>
+    <nav class="nav-links">
+      <a href="#features">Features</a>
+      <a href="#screenshots">Screenshots</a>
+      <a href="#install">Install</a>
+      <a href="https://github.com/christianrenz210/blockscraft" target="_blank" rel="noopener">GitHub</a>
+    </nav>
+    <a class="btn btn-small btn-play nav-cta" href="play/">Play now</a>
+  </header>
+
+  <main id="top">
+    <!-- Hero -->
+    <section class="hero">
+      <div class="hero-bg" aria-hidden="true"></div>
+      <div class="hero-inner">
+        <p class="eyebrow">Free &middot; No ads &middot; Works offline</p>
+        <h1 class="logo">Blocks<span>Craft</span></h1>
+        <p class="lead">Build. Explore. Create. A blocky 3D sandbox with endless worlds, on your Android phone or right here in your browser.</p>
+
+        <div class="cta">
+          <a id="dl-btn" class="btn btn-download" href="https://github.com/christianrenz210/blockscraft/releases/latest/download/BlocksCraft.apk">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0-5-5m5 5 5-5M4 19h16" /></svg>
+            <span class="btn-text">
+              <strong>Download APK</strong>
+              <small id="dl-meta">For Android</small>
+            </span>
+          </a>
+          <a class="btn btn-play" href="play/">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l12-7.5z" /></svg>
+            <span class="btn-text">
+              <strong>Play in Browser</strong>
+              <small>No install needed</small>
+            </span>
+          </a>
+        </div>
+        <p id="platform-note" class="note"></p>
+      </div>
+    </section>
+
+    <!-- Features -->
+    <section id="features" class="section">
+      <h2 class="section-title">What you can do</h2>
+      <div class="features">
+        <article class="feature">
+          <div class="ficon"><svg viewBox="0 0 24 24"><path d="M3 17l5-6 4 4 3-3 6 5M3 20h18" /><circle cx="17" cy="6" r="2" /></svg></div>
+          <h3>Endless worlds</h3>
+          <p>Every world is generated from a seed: plains, forests, deserts, snowy peaks, oceans and winding caves full of ore.</p>
+        </article>
+        <article class="feature">
+          <div class="ficon"><svg viewBox="0 0 24 24"><path d="M12 2 3 7v10l9 5 9-5V7z" /><path d="M3 7l9 5 9-5M12 12v10" /></svg></div>
+          <h3>Build anything</h3>
+          <p>26 block types: wood, bricks, glass, colored cloth, gold and more. Break and place blocks instantly in creative mode.</p>
+        </article>
+        <article class="feature">
+          <div class="ficon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" /></svg></div>
+          <h3>Day &amp; night</h3>
+          <p>Watch the sun set over the ocean and the stars come out. Clouds drift by, and you can swim and fly.</p>
+        </article>
+        <article class="feature">
+          <div class="ficon"><svg viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="3" /><circle cx="7" cy="12" r="2.2" /><path d="M16 10.5h3M17.5 9v3" /></svg></div>
+          <h3>Made for phones</h3>
+          <p>A joystick, touch-to-look, and tap or hold to build and break. Plays in full-screen landscape mode.</p>
+        </article>
+        <article class="feature">
+          <div class="ficon"><svg viewBox="0 0 24 24"><path d="M5 3h11l3 3v15H5z" /><path d="M8 3v6h8V3M8 21v-7h8v7" /></svg></div>
+          <h3>Auto-save</h3>
+          <p>Your world is saved on your device every 20 seconds and whenever you pause, so you can pick up where you left off.</p>
+        </article>
+        <article class="feature">
+          <div class="ficon"><svg viewBox="0 0 24 24"><path d="M2 8.5a15 15 0 0 1 20 0M5 12a10 10 0 0 1 14 0M8.5 15.5a5 5 0 0 1 7 0" /><path d="M3 3l18 18" /></svg></div>
+          <h3>Plays offline</h3>
+          <p>The Android app needs no internet connection. The whole game is small, and every texture is drawn in code.</p>
+        </article>
+      </div>
+    </section>
+
+    <!-- Screenshots -->
+    <section id="screenshots" class="section">
+      <h2 class="section-title">Screenshots</h2>
+      <div class="gallery">
+        <figure class="shot shot-wide"><img src="screenshots/house.jpg" alt="A wooden house with a brick roof next to the sea" loading="lazy"><figcaption>Build your own home</figcaption></figure>
+        <figure class="shot"><img src="screenshots/beach.jpg" alt="Grassy cliffs and a sandy beach beside the ocean" loading="lazy"><figcaption>Coasts &amp; oceans</figcaption></figure>
+        <figure class="shot"><img src="screenshots/aerial.jpg" alt="Flying over a forest next to a desert" loading="lazy"><figcaption>Forests &amp; deserts</figcaption></figure>
+        <figure class="shot"><img src="screenshots/sunset.jpg" alt="An orange sunset over sandy hills" loading="lazy"><figcaption>Sunsets</figcaption></figure>
+        <figure class="shot"><img src="screenshots/night.jpg" alt="A starry night sky over the land" loading="lazy"><figcaption>Starry nights</figcaption></figure>
+      </div>
+    </section>
+
+    <!-- Install -->
+    <section id="install" class="section">
+      <h2 class="section-title">Install on Android</h2>
+      <ol class="steps">
+        <li><span class="num">1</span><div><h3>Download</h3><p>Tap <b>Download APK</b> on your phone. If Chrome asks, tap <b>Download anyway</b>.</p></div></li>
+        <li><span class="num">2</span><div><h3>Open the file</h3><p>Open <b>BlocksCraft.apk</b> from your notifications or the Downloads folder.</p></div></li>
+        <li><span class="num">3</span><div><h3>Allow the install</h3><p>If Android asks, turn on <b>Allow from this source</b> for your browser, then go back.</p></div></li>
+        <li><span class="num">4</span><div><h3>Play!</h3><p>Tap <b>Install</b>, then open BlocksCraft from your home screen.</p></div></li>
+      </ol>
+      <p class="fine">Requires Android 6.0 or newer. New versions install over the old one, and your world is kept.
+        On iPhone or a computer? <a href="play/">Play in your browser</a> instead.</p>
+    </section>
+
+    <!-- Controls -->
+    <section class="section">
+      <h2 class="section-title">Controls</h2>
+      <div class="controls">
+        <div class="ctrl-card">
+          <h3>Phone</h3>
+          <dl>
+            <dt>Left joystick</dt><dd>Walk (push all the way to run)</dd>
+            <dt>Drag right side</dt><dd>Look around</dd>
+            <dt>Tap</dt><dd>Place block</dd>
+            <dt>Hold</dt><dd>Break block</dd>
+            <dt>&#9650; / FLY</dt><dd>Jump, swim &middot; toggle flying</dd>
+          </dl>
+        </div>
+        <div class="ctrl-card">
+          <h3>Computer</h3>
+          <dl>
+            <dt>W A S D</dt><dd>Walk (Ctrl to run)</dd>
+            <dt>Mouse</dt><dd>Look around</dd>
+            <dt>Left / Right click</dt><dd>Break / place block</dd>
+            <dt>1–9, wheel, E</dt><dd>Choose blocks</dd>
+            <dt>Space / F</dt><dd>Jump &middot; toggle flying</dd>
+          </dl>
+        </div>
+      </div>
+    </section>
+
+    <!-- Final CTA -->
+    <section class="final">
+      <h2>Ready to build?</h2>
+      <div class="cta">
+        <a class="btn btn-download" href="https://github.com/christianrenz210/blockscraft/releases/latest/download/BlocksCraft.apk">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0-5-5m5 5 5-5M4 19h16" /></svg>
+          <span class="btn-text"><strong>Download APK</strong><small>For Android</small></span>
+        </a>
+        <a class="btn btn-play" href="play/">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l12-7.5z" /></svg>
+          <span class="btn-text"><strong>Play in Browser</strong><small>No install needed</small></span>
+        </a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <p>BlocksCraft is free and open source &middot; <a href="https://github.com/christianrenz210/blockscraft" target="_blank" rel="noopener">View on GitHub</a> &middot; <a href="https://github.com/christianrenz210/blockscraft/releases" target="_blank" rel="noopener">All releases</a></p>
+    <p class="muted">Made with Three.js. Not affiliated with Mojang or Microsoft.</p>
+  </footer>
+
+  <!-- Lightbox -->
+  <div id="lightbox" class="lightbox" hidden>
+    <button class="lb-close" aria-label="Close">&#10005;</button>
+    <img alt="">
+  </div>
+
+  <script>
+    // Show the latest release's version and size on the download button.
+    fetch('https://api.github.com/repos/christianrenz210/blockscraft/releases/latest')
+      .then((r) => (r.ok ? r.json() : null))
+      .then((rel) => {
+        if (!rel) return;
+        const apk = (rel.assets || []).find((a) => a.name.endsWith('.apk'));
+        const parts = ['Android', rel.tag_name];
+        if (apk) parts.push((apk.size / 1048576).toFixed(1) + ' MB');
+        document.getElementById('dl-meta').textContent = parts.join(' · ');
+      })
+      .catch(() => {});
+
+    // Platform hint.
+    const ua = navigator.userAgent;
+    const note = document.getElementById('platform-note');
+    if (/iPhone|iPad|iPod/.test(ua)) {
+      note.textContent = 'On iPhone/iPad? The APK is for Android only. Tap "Play in Browser" to play.';
+    } else if (/Android/.test(ua)) {
+      note.textContent = 'Android detected: tap "Download APK" to install the app.';
+    } else {
+      note.textContent = 'On a computer? Play in your browser, or open this page on your Android phone to install the app.';
+    }
+
+    // Screenshot lightbox.
+    const lb = document.getElementById('lightbox');
+    const lbImg = lb.querySelector('img');
+    document.querySelectorAll('.shot img').forEach((img) => {
+      img.addEventListener('click', () => { lbImg.src = img.src; lbImg.alt = img.alt; lb.hidden = false; });
+    });
+    lb.addEventListener('click', () => { lb.hidden = true; });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') lb.hidden = true; });
+  </script>
+</body>
+</html>

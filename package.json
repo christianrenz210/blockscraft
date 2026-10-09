@@ -5,7 +5,9 @@
   "description": "BlocksCraft - a blocky sandbox game (Three.js + Capacitor)",
   "scripts": {
     "build": "node scripts/copy-libs.mjs",
-    "serve": "npm run build && npx --yes http-server www -p 8080 -c-1"
+    "build:site": "npm run build && node scripts/build-site.mjs",
+    "serve": "npm run build && npx --yes http-server www -p 8080 -c-1",
+    "serve:site": "npm run build:site && npx --yes http-server dist -p 8081 -c-1"
   },
   "dependencies": {
     "three": "^0.170.0"

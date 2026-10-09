@@ -110,6 +110,24 @@ function skyQuad(size, color) {
 const sun = skyQuad(26, 0xfff2a8);
 const moon = skyQuad(18, 0xdfe8ff);
 
+// Stars: random points on a big sphere around the camera, faded in at night.
+const stars = (() => {
+  const pos = [];
+  for (let i = 0; i < 700; i++) {
+    const u = Math.random() * 2 - 1, a = Math.random() * Math.PI * 2, r = Math.sqrt(1 - u * u);
+    pos.push(Math.cos(a) * r * 400, Math.abs(u) * 400 - 40, Math.sin(a) * r * 400);
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  const p = new THREE.Points(g, new THREE.PointsMaterial({
+    color: 0xffffff, size: 2, sizeAttenuation: false, fog: false, transparent: true, depthWrite: false,
+  }));
+  p.frustumCulled = false;
+  p.renderOrder = -5;
+  scene.add(p);
+  return p;
+})();
+
 // Blocky clouds that drift with the wind and fade out toward the edges.
 const CLOUD_SIZE = 480, CLOUD_REPEAT = 6;
 const clouds = (() => {
@@ -600,9 +618,14 @@ document.addEventListener('visibilitychange', () => {
 window.addEventListener('pagehide', saveGame);
 
 // ------------------------------------------------------------------ sky
-const DAY_SKY = new THREE.Color(0x8fc4ff);
-const NIGHT_SKY = new THREE.Color(0x060914);
-const SUNSET = new THREE.Color(0xff9a52);
+// Sky gradient stops, from midnight (0) to full day (1).
+const SKY_STOPS = [
+  [0, new THREE.Color(0x0a1028)],
+  [0.3, new THREE.Color(0x3a3266)],
+  [0.5, new THREE.Color(0xee8a58)],
+  [0.72, new THREE.Color(0xdcb9a0)],
+  [1, new THREE.Color(0x8fc4ff)],
+];
 const WATER_FOG = new THREE.Color(0x14306e);
 const sunDir = new THREE.Vector3();
 
@@ -616,11 +639,15 @@ function updateSky(dt) {
   const ang = dayTime * Math.PI * 2;
   const sunH = Math.sin(ang);
   const day = smoothstep(-0.2, 0.25, sunH);
-  const light = 0.2 + 0.8 * day;
+  const light = 0.34 + 0.66 * day;
 
-  skyColor.copy(NIGHT_SKY).lerp(DAY_SKY, day);
-  const dusk = Math.max(0, 1 - Math.abs(sunH) / 0.3) * 0.5;
-  skyColor.lerp(SUNSET, dusk);
+  for (let i = 1; i < SKY_STOPS.length; i++) {
+    const [t0, c0] = SKY_STOPS[i - 1], [t1, c1] = SKY_STOPS[i];
+    if (day <= t1) { skyColor.copy(c0).lerp(c1, (day - t0) / (t1 - t0)); break; }
+  }
+  stars.material.opacity = 1 - smoothstep(0, 0.35, day);
+  stars.visible = stars.material.opacity > 0.01;
+  stars.position.copy(camera.position);
 
   const R = settings.renderDist * CS;
   if (player && player.headInWater) {
@@ -721,6 +748,10 @@ function frame(now) {
 }
 
 // ------------------------------------------------------------------ boot
+// In the browser (not the Android app) link back to the website's download page.
+if (!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform())) {
+  $('site-link').classList.remove('hidden');
+}
 buildInventoryGrid();
 renderHotbar();
 applySettings();
@@ -732,4 +763,5 @@ requestAnimationFrame(frame);
 window.blockscraft = {
   get world() { return world; }, get player() { return player; }, get state() { return state; }, get target() { return target; },
   breakBlock, placeBlock,
+  setTime(t) { dayTime = t; },
 };

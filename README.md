@@ -8,8 +8,9 @@ A blocky 3D sandbox game for Android phones and the web: explore, break blocks, 
 - Touch controls (joystick and buttons) on phones; keyboard and mouse on PC
 - Auto-save: your world is kept on the device
 
-**Play in your browser:** https://blockscraft.vercel.app  
-**Download the Android APK:** https://github.com/christianrenz210/blockscraft/releases
+**Website (download the APK or play in your browser):** https://blockscraft.vercel.app  
+**Play directly:** https://blockscraft.vercel.app/play/  
+**APK direct link:** https://github.com/christianrenz210/blockscraft/releases/latest/download/BlocksCraft.apk
 
 Built with **Three.js** (WebGL). It runs as an Android app through **Capacitor**.
 The APK is built automatically by **GitHub Actions**, so you don't need Android Studio.
@@ -57,6 +58,12 @@ npm run serve
 ```
 Then open http://localhost:8080 in Chrome or Edge.
 
+To preview the whole website (landing page + game at `/play/`):
+```bash
+npm run serve:site
+```
+Then open http://localhost:8081.
+
 ## Controls
 
 | Phone | Computer | Action |
@@ -76,7 +83,8 @@ Then open http://localhost:8080 in Chrome or Edge.
 ## Project layout
 
 ```
-www/                 the game (HTML/CSS/JS)
+site/                landing page (download + play links, screenshots)
+www/                 the game (HTML/CSS/JS), served at /play/ on the website
   js/main.js         game loop, menus, HUD, sky
   js/world.js        chunks, terrain generation, meshing, raycasting
   js/player.js       movement and collision
@@ -85,6 +93,8 @@ www/                 the game (HTML/CSS/JS)
   js/input.js        keyboard/mouse + touch controls
 scripts/
   copy-libs.mjs      copies three.js into www/lib
+  build-site.mjs     builds the website into dist/ (Vercel runs this)
+  icon-lib.mjs       paints the grass-block icon PNGs
   android-setup.mjs  landscape, full-screen, app icon, splash, version
 android-overrides/   full-screen MainActivity
 .github/workflows/   APK build

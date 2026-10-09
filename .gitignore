@@ -3,3 +3,4 @@ www/lib/
 android/
 *.apk
 .vercel
+dist/

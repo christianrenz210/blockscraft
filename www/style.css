@@ -147,6 +147,8 @@ h3 { margin: 0 0 6px; text-shadow: var(--text-shadow); }
 .mbtn:disabled { color: #a0a0a0; background: #4a4a4a; cursor: default; }
 
 .footer { position: fixed; left: 10px; bottom: 8px; font-size: 13px; opacity: 0.8; text-shadow: var(--text-shadow); }
+.site-link { position: fixed; right: 12px; bottom: 8px; font-size: 14px; font-weight: bold; color: #ffff55; text-shadow: var(--text-shadow); text-decoration: none; }
+.site-link:hover { text-decoration: underline; }
 
 .field { display: flex; flex-direction: column; gap: 6px; width: min(380px, 86vw); font-weight: bold; text-shadow: var(--text-shadow); }
 .field input[type="text"] {
