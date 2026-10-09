@@ -43,11 +43,11 @@
         <p class="lead">Build. Explore. Create. A blocky 3D sandbox with endless worlds, on your Android phone or right here in your browser.</p>
 
         <div class="cta">
-          <a id="dl-btn" class="btn btn-download" href="https://github.com/christianrenz210/blockscraft/releases/latest/download/BlocksCraft.apk">
+          <a id="dl-btn" class="btn btn-download" href="%APK_URL%" download="BlocksCraft.apk">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0-5-5m5 5 5-5M4 19h16" /></svg>
             <span class="btn-text">
               <strong>Download APK</strong>
-              <small id="dl-meta">For Android</small>
+              <small>%APK_META%</small>
             </span>
           </a>
           <a class="btn btn-play" href="play/">
@@ -155,9 +155,9 @@
     <section class="final">
       <h2>Ready to build?</h2>
       <div class="cta">
-        <a class="btn btn-download" href="https://github.com/christianrenz210/blockscraft/releases/latest/download/BlocksCraft.apk">
+        <a class="btn btn-download" href="%APK_URL%" download="BlocksCraft.apk">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0-5-5m5 5 5-5M4 19h16" /></svg>
-          <span class="btn-text"><strong>Download APK</strong><small>For Android</small></span>
+          <span class="btn-text"><strong>Download APK</strong><small>%APK_META%</small></span>
         </a>
         <a class="btn btn-play" href="play/">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l12-7.5z" /></svg>
@@ -179,18 +179,6 @@
   </div>
 
   <script>
-    // Show the latest release's version and size on the download button.
-    fetch('https://api.github.com/repos/christianrenz210/blockscraft/releases/latest')
-      .then((r) => (r.ok ? r.json() : null))
-      .then((rel) => {
-        if (!rel) return;
-        const apk = (rel.assets || []).find((a) => a.name.endsWith('.apk'));
-        const parts = ['Android', rel.tag_name];
-        if (apk) parts.push((apk.size / 1048576).toFixed(1) + ' MB');
-        document.getElementById('dl-meta').textContent = parts.join(' · ');
-      })
-      .catch(() => {});
-
     // Platform hint.
     const ua = navigator.userAgent;
     const note = document.getElementById('platform-note');

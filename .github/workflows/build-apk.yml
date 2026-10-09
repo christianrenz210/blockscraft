@@ -72,3 +72,11 @@ jobs:
         with:
           files: BlocksCraft.apk
           generate_release_notes: true
+
+      # Rebuild the website so its download button serves the new APK.
+      - name: Update website download
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          HOOK: ${{ secrets.VERCEL_DEPLOY_HOOK }}
+        run: |
+          if [ -n "$HOOK" ]; then curl -fsS -X POST "$HOOK" > /dev/null && echo "Website redeploy triggered"; else echo "VERCEL_DEPLOY_HOOK not set; skipping"; fi

@@ -10,7 +10,7 @@ A blocky 3D sandbox game for Android phones and the web: explore, break blocks, 
 
 **Website (download the APK or play in your browser):** https://blockscraft.vercel.app  
 **Play directly:** https://blockscraft.vercel.app/play/  
-**APK direct link:** https://github.com/christianrenz210/blockscraft/releases/latest/download/BlocksCraft.apk
+**APK direct download:** https://blockscraft.vercel.app/BlocksCraft.apk
 
 Built with **Three.js** (WebGL). It runs as an Android app through **Capacitor**.
 The APK is built automatically by **GitHub Actions**, so you don't need Android Studio.
