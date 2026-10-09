@@ -3,7 +3,8 @@
 A blocky 3D sandbox game for Android phones and the web: explore, break blocks, and build.
 
 - Endless generated worlds: plains, forests, deserts, snowy mountains, oceans, caves, ores
-- 26 block types, all textures painted in code (no image files)
+- 28 block types, all textures painted in code (no image files)
+- Doors that open and close, and beds you can sleep in to skip the night (and set your spawn point)
 - Day/night cycle, clouds, water you can swim in, flying, break particles, sound effects
 - Touch controls (joystick and buttons) on phones; keyboard and mouse on PC
 - Auto-save: your world is kept on the device
@@ -78,6 +79,7 @@ Then open http://localhost:8081.
 | ⋯ | E | Choose blocks |
 | Hotbar | 1–9, mouse wheel | Select block |
 | — | Middle click | Pick the block you're looking at |
+| Tap a door / bed | Right click a door / bed | Open/close the door · sleep (at night) and set spawn |
 | ❚❚ / Back button | Esc | Pause |
 
 ## Project layout

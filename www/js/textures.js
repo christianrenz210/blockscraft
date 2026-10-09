@@ -1,6 +1,6 @@
 // Procedurally painted 16x16 pixel-art textures packed into one atlas.
 // No image files needed: everything is drawn with seeded random noise.
-import { T, ATLAS_COLS, ATLAS_ROWS, BLOCKS } from './blocks.js';
+import { T, ATLAS_COLS, ATLAS_ROWS, BLOCKS, B } from './blocks.js';
 import { mulberry32 } from './noise.js';
 
 export const TILE = 16;
@@ -231,34 +231,87 @@ export function createAtlas() {
     else set(T.PUMPKIN_TOP, x, y, [222, 135, 30], (1 - Math.abs(Math.sin(Math.atan2(y - 7.5, x - 7.5) * 4)) * 0.15) * vary(0.08));
   }
 
+  // --- Door (bottom half has the knob, top half has two windows) ---
+  const DOOR = [160, 118, 68];
+  const FRAME = [110, 78, 42];
+  for (const tile of [T.DOOR_BOTTOM, T.DOOR_TOP]) {
+    const top = tile === T.DOOR_TOP;
+    for (let y = 0; y < TILE; y++) for (let x = 0; x < TILE; x++) {
+      const frame = x < 2 || x > 13 || (top ? y < 2 : y > 13);
+      const brace = !top && (y === 6 || y === 7);
+      const window = top && y >= 3 && y <= 9 && ((x >= 3 && x <= 6) || (x >= 9 && x <= 12));
+      if (window) set(tile, x, y, [0, 0, 0], 1, 0);
+      else if (frame || brace) set(tile, x, y, FRAME, vary(0.1));
+      else set(tile, x, y, DOOR, vary(0.1) * (x % 4 === 1 ? 0.85 : 1));
+    }
+  }
+  set(T.DOOR_BOTTOM, 11, 1, [40, 40, 40]);
+  set(T.DOOR_BOTTOM, 11, 2, [70, 70, 70]);
+
+  // --- Bed ---
+  const BLANKET = [176, 40, 44];
+  const PILLOW = [236, 236, 230];
+  const BEDWOOD = [150, 110, 66];
+  for (let y = 0; y < TILE; y++) for (let x = 0; x < TILE; x++) {
+    const edge = x === 0 || x === 15;
+    set(T.BED_TOP_FOOT, x, y, BLANKET, (edge ? 0.8 : 1) * vary(0.08) * (y === 14 ? 0.85 : 1));
+    // Head end: pillow along the top rows of the tile (the +v direction).
+    const pillow = y >= 1 && y <= 5 && x >= 2 && x <= 13;
+    if (pillow) set(T.BED_TOP_HEAD, x, y, PILLOW, vary(0.04) * (y === 5 ? 0.88 : 1));
+    else if (y <= 6) set(T.BED_TOP_HEAD, x, y, [220, 220, 214], vary(0.04));
+    else set(T.BED_TOP_HEAD, x, y, BLANKET, (edge ? 0.8 : 1) * vary(0.08) * (y === 7 ? 1.15 : 1));
+  }
+  // Sides only show the bottom 9 rows (the bed is 9/16 tall).
+  for (let y = 0; y < TILE; y++) for (let x = 0; x < TILE; x++) {
+    const leg = (x < 3 || x > 12) && y >= 14;
+    set(T.BED_SIDE_FOOT, x, y, y < 11 ? BLANKET : y === 11 ? [120, 28, 30] : BEDWOOD,
+      vary(0.08) * (y >= 14 && !leg ? 0.6 : 1));
+    set(T.BED_SIDE_HEAD, x, y, y < 9 ? PILLOW : y < 11 ? BLANKET : y === 11 ? [120, 28, 30] : BEDWOOD,
+      vary(0.08) * (y >= 14 && !leg ? 0.6 : 1));
+  }
+
   ctx.putImageData(img, 0, 0);
   return canvas;
 }
 
-// Draws a small isometric cube icon for a block (used in the hotbar/inventory).
+// Draws a small item icon for a block (used in the hotbar/inventory): an isometric
+// cube for normal blocks, a flat picture for the door and a low box for the bed.
 export function makeBlockIcon(atlas, blockId, size = 48) {
   const c = document.createElement('canvas');
   c.width = c.height = size;
   const ctx = c.getContext('2d');
   ctx.imageSmoothingEnabled = false;
+  const src = (tile) => [(tile % ATLAS_COLS) * TILE, Math.floor(tile / ATLAS_COLS) * TILE];
+
+  if (blockId === B.DOOR) {
+    const w = size * 0.42, h = size * 0.42, x = (size - w) / 2, y = size / 2 - h;
+    ctx.drawImage(atlas, ...src(T.DOOR_TOP), TILE, TILE, x, y, w, h);
+    ctx.drawImage(atlas, ...src(T.DOOR_BOTTOM), TILE, TILE, x, y + h, w, h);
+    return c.toDataURL();
+  }
+
   const [top, , side] = BLOCKS[blockId].tiles;
+  const height = blockId === B.BED ? 9 / 16 : 1;
   const s = size / 64; // geometry is designed on a 64px grid
   const k = s / TILE;
+  const drop = (1 - height) * 30; // lower boxes sit at the bottom of the icon
+  const cropY = (1 - height) * TILE; // show the bottom rows of side textures
 
-  function face(tile, a, b, cc, dd, e, f, shade) {
-    const sx = (tile % ATLAS_COLS) * TILE, sy = Math.floor(tile / ATLAS_COLS) * TILE;
+  function face(tile, a, b, cc, dd, e, f, shade, crop) {
+    const [sx, sy] = src(tile);
     ctx.setTransform(a * k, b * k, cc * k, dd * k, e * s, f * s);
-    ctx.drawImage(atlas, sx, sy, TILE, TILE, 0, 0, TILE, TILE);
+    const hh = TILE - crop;
+    ctx.drawImage(atlas, sx, sy + crop, TILE, hh, 0, 0, TILE, hh);
     if (shade > 0) {
       ctx.globalCompositeOperation = 'source-atop';
       ctx.fillStyle = `rgba(0,0,0,${shade})`;
-      ctx.fillRect(0, 0, TILE, TILE);
+      ctx.fillRect(0, 0, TILE, hh);
       ctx.globalCompositeOperation = 'source-over';
     }
   }
-  face(side, 26, 13, 0, 30, 6, 17, 0.28); // left
-  face(side, 26, -13, 0, 30, 32, 30, 0.45); // right
-  face(top, 26, -13, 26, 13, 6, 17, 0); // top
+  face(side, 26, 13, 0, 30, 6, 17 + drop, 0.28, cropY); // left
+  face(side, 26, -13, 0, 30, 32, 30 + drop, 0.45, cropY); // right
+  face(top, 26, -13, 26, 13, 6, 17 + drop, 0, 0); // top
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   return c.toDataURL();
 }

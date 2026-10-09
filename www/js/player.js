@@ -1,6 +1,6 @@
 // First-person player: movement, AABB-vs-voxel collision, swimming and flying.
 import * as THREE from 'three';
-import { B } from './blocks.js';
+import { B, IS_SOLID, boxesOf } from './blocks.js';
 
 const HALF_W = 0.3;
 const HEIGHT = 1.8;
@@ -35,18 +35,30 @@ export class Player {
     return out.set(-Math.sin(this.yaw) * cp, Math.sin(this.pitch), -Math.cos(this.yaw) * cp);
   }
 
-  // Does the player's box at feet position (x, y, z) overlap any solid block?
-  collidesAt(x, y, z) {
+  // Calls fn(minX, minY, minZ, maxX, maxY, maxZ) for every solid block box
+  // overlapping the player's box at feet position (x, y, z).
+  forEachHit(x, y, z, fn) {
     const w = this.world;
-    const x0 = Math.floor(x - HALF_W), x1 = Math.floor(x + HALF_W);
-    const y0 = Math.floor(y), y1 = Math.floor(y + HEIGHT);
-    const z0 = Math.floor(z - HALF_W), z1 = Math.floor(z + HALF_W);
-    for (let by = y0; by <= y1; by++) {
-      for (let bz = z0; bz <= z1; bz++) {
-        for (let bx = x0; bx <= x1; bx++) if (w.isSolid(bx, by, bz)) return true;
+    const ax0 = x - HALF_W, ax1 = x + HALF_W, ay0 = y, ay1 = y + HEIGHT, az0 = z - HALF_W, az1 = z + HALF_W;
+    for (let by = Math.floor(ay0); by <= Math.floor(ay1); by++) {
+      for (let bz = Math.floor(az0); bz <= Math.floor(az1); bz++) {
+        for (let bx = Math.floor(ax0); bx <= Math.floor(ax1); bx++) {
+          const id = w.getBlock(bx, by, bz);
+          if (!IS_SOLID[id]) continue;
+          for (const b of boxesOf(id)) {
+            const x0 = bx + b[0], y0 = by + b[1], z0 = bz + b[2], x1 = bx + b[3], y1 = by + b[4], z1 = bz + b[5];
+            if (ax1 > x0 && ax0 < x1 && ay1 > y0 && ay0 < y1 && az1 > z0 && az0 < z1) fn(x0, y0, z0, x1, y1, z1);
+          }
+        }
       }
     }
-    return false;
+  }
+
+  // Does the player's box at feet position (x, y, z) overlap any solid block?
+  collidesAt(x, y, z) {
+    let hit = false;
+    this.forEachHit(x, y, z, () => { hit = true; });
+    return hit;
   }
 
   // Would a block at (bx, by, bz) overlap the player?
@@ -125,28 +137,20 @@ export class Player {
     const p = this.pos;
     if (axis === 0) p.x += amount; else if (axis === 1) p.y += amount; else p.z += amount;
 
-    const x0 = Math.floor(p.x - HALF_W), x1 = Math.floor(p.x + HALF_W);
-    const y0 = Math.floor(p.y), y1 = Math.floor(p.y + HEIGHT);
-    const z0 = Math.floor(p.z - HALF_W), z1 = Math.floor(p.z + HALF_W);
-    const w = this.world;
-    for (let by = y0; by <= y1; by++) {
-      for (let bz = z0; bz <= z1; bz++) {
-        for (let bx = x0; bx <= x1; bx++) {
-          if (!w.isSolid(bx, by, bz)) continue;
-          if (axis === 0) {
-            p.x = amount > 0 ? bx - HALF_W - 1e-4 : bx + 1 + HALF_W + 1e-4;
-            this.vel.x = 0;
-          } else if (axis === 2) {
-            p.z = amount > 0 ? bz - HALF_W - 1e-4 : bz + 1 + HALF_W + 1e-4;
-            this.vel.z = 0;
-          } else {
-            if (amount > 0) p.y = by - HEIGHT - 1e-4;
-            else { p.y = by + 1; this.onGround = true; }
-            this.vel.y = 0;
-          }
-          return;
-        }
-      }
+    // Push back out of everything we now overlap, to the nearest valid spot.
+    let limit = amount > 0 ? Infinity : -Infinity;
+    this.forEachHit(p.x, p.y, p.z, (x0, y0, z0, x1, y1, z1) => {
+      if (axis === 0) limit = amount > 0 ? Math.min(limit, x0 - HALF_W - 1e-4) : Math.max(limit, x1 + HALF_W + 1e-4);
+      else if (axis === 2) limit = amount > 0 ? Math.min(limit, z0 - HALF_W - 1e-4) : Math.max(limit, z1 + HALF_W + 1e-4);
+      else limit = amount > 0 ? Math.min(limit, y0 - HEIGHT - 1e-4) : Math.max(limit, y1);
+    });
+    if (!Number.isFinite(limit)) return;
+    if (axis === 0) { p.x = limit; this.vel.x = 0; }
+    else if (axis === 2) { p.z = limit; this.vel.z = 0; }
+    else {
+      p.y = limit;
+      if (amount < 0) this.onGround = true;
+      this.vel.y = 0;
     }
   }
 }

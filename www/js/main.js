@@ -1,6 +1,9 @@
 // BlocksCraft - entry point: renderer, game loop, menus and HUD.
 import * as THREE from 'three';
-import { B, BLOCKS, PLACEABLE, DEFAULT_HOTBAR, T, IS_SOLID, ATLAS_COLS } from './blocks.js';
+import {
+  B, BLOCKS, PLACEABLE, DEFAULT_HOTBAR, T, IS_SOLID, ATLAS_COLS, FACING_DIRS, facingFromYaw,
+  isDoor, isBed, doorId, doorFacing, doorOpen, doorUpper, bedId, bedFacing, bedHead, itemOf,
+} from './blocks.js';
 import { createAtlas, makeBlockIcon, tileDataURL, TILE } from './textures.js';
 import { World, CS, CH, SEA } from './world.js';
 import { Player } from './player.js';
@@ -352,35 +355,121 @@ function closeInventory() {
 }
 
 // ------------------------------------------------------------------ actions
+// The other half of a two-block door or bed, or null.
+function partnerOf(x, y, z, id) {
+  if (isDoor(id)) {
+    const py = doorUpper(id) ? y - 1 : y + 1;
+    return isDoor(world.getBlock(x, py, z)) ? [x, py, z] : null;
+  }
+  if (isBed(id)) {
+    const [dx, dz] = FACING_DIRS[bedFacing(id)];
+    const s = bedHead(id) ? -1 : 1;
+    const px = x + dx * s, pz = z + dz * s;
+    return isBed(world.getBlock(px, y, pz)) ? [px, y, pz] : null;
+  }
+  return null;
+}
+
 function breakBlock() {
   if (!target) return;
   const { x, y, z, id } = target;
   if (!BLOCKS[id].breakable) return;
+  const partner = partnerOf(x, y, z, id);
   // If water is next to the hole, let it flow in.
   const nearWater = [[1, 0, 0], [-1, 0, 0], [0, 0, 1], [0, 0, -1], [0, 1, 0]]
     .some(([dx, dy, dz]) => world.getBlock(x + dx, y + dy, z + dz) === B.WATER);
   world.setBlock(x, y, z, nearWater ? B.WATER : B.AIR);
+  if (partner) world.setBlock(partner[0], partner[1], partner[2], B.AIR);
   spawnParticles(x, y, z, id);
   sfx.break();
   updateTarget();
 }
 
-function placeBlock() {
+const canReplace = (x, y, z) => {
+  if (y < 0 || y >= CH) return false;
+  const b = world.getBlock(x, y, z);
+  return b === B.AIR || b === B.WATER;
+};
+
+// Place the selected block, or use the door/bed being looked at.
+// `repeat` is true for auto-repeat while the button is held.
+function placeBlock(repeat = false) {
   if (!target) return;
-  const id = hotbar[selected];
+  if (isDoor(target.id) || isBed(target.id)) {
+    if (repeat) return;
+    if (isDoor(target.id)) toggleDoor(target.x, target.y, target.z, target.id);
+    else sleepInBed(target.x, target.y, target.z);
+    return;
+  }
+  const item = hotbar[selected];
   const x = target.x + target.nx, y = target.y + target.ny, z = target.z + target.nz;
-  if (y < 0 || y >= CH) return;
-  const existing = world.getBlock(x, y, z);
-  if (existing !== B.AIR && existing !== B.WATER) return;
-  if (IS_SOLID[id] && player.intersectsBlock(x, y, z)) return;
-  world.setBlock(x, y, z, id);
+  if (!canReplace(x, y, z)) return;
+  const facing = facingFromYaw(player.yaw);
+
+  if (item === B.DOOR) {
+    if (!canReplace(x, y + 1, z)) return;
+    if (player.intersectsBlock(x, y, z) || player.intersectsBlock(x, y + 1, z)) return;
+    world.setBlock(x, y, z, doorId(facing, false, false));
+    world.setBlock(x, y + 1, z, doorId(facing, false, true));
+  } else if (item === B.BED) {
+    const [dx, dz] = FACING_DIRS[facing];
+    const hx = x + dx, hz = z + dz;
+    if (!canReplace(hx, y, hz)) { toast('Not enough room for the bed', 1200); return; }
+    if (!world.isSolid(x, y - 1, z) || !world.isSolid(hx, y - 1, hz)) { toast('Beds need solid ground', 1200); return; }
+    if (player.intersectsBlock(x, y, z) || player.intersectsBlock(hx, y, hz)) return;
+    world.setBlock(x, y, z, bedId(facing, false));
+    world.setBlock(hx, y, hz, bedId(facing, true));
+  } else {
+    if (IS_SOLID[item] && player.intersectsBlock(x, y, z)) return;
+    world.setBlock(x, y, z, item);
+  }
   sfx.place();
   updateTarget();
 }
 
+function toggleDoor(x, y, z, id) {
+  const open = !doorOpen(id), f = doorFacing(id);
+  const lowerY = doorUpper(id) ? y - 1 : y;
+  // Don't swing the door shut on top of the player.
+  if (!open && (player.intersectsBlock(x, lowerY, z) || player.intersectsBlock(x, lowerY + 1, z))) {
+    const closedBox = BLOCKS[doorId(f, false, false)].boxes[0];
+    const p = player.pos;
+    const hw = 0.3;
+    if (p.x + hw > x + closedBox[0] && p.x - hw < x + closedBox[3] &&
+        p.z + hw > z + closedBox[2] && p.z - hw < z + closedBox[5]) return;
+  }
+  if (isDoor(world.getBlock(x, lowerY, z))) world.setBlock(x, lowerY, z, doorId(f, open, false));
+  if (isDoor(world.getBlock(x, lowerY + 1, z))) world.setBlock(x, lowerY + 1, z, doorId(f, open, true));
+  sfx.door();
+  updateTarget();
+}
+
+const isNight = () => Math.sin(dayTime * Math.PI * 2) < -0.05;
+let sleeping = false;
+
+function sleepInBed(x, y, z) {
+  if (sleeping) return;
+  spawn = { x: x + 0.5, y: y + 0.6, z: z + 0.5 };
+  if (!isNight()) {
+    toast('You can only sleep at night. Spawn point set!', 2200);
+    saveGame();
+    return;
+  }
+  sleeping = true;
+  input.reset();
+  $('sleep').classList.add('on');
+  setTimeout(() => { dayTime = 0.01; }, 1300);
+  setTimeout(() => {
+    $('sleep').classList.remove('on');
+    sleeping = false;
+    toast('Good morning! Spawn point set.', 2200);
+    saveGame();
+  }, 2400);
+}
+
 function pickBlock() {
   if (state !== 'playing' || !target) return;
-  const id = target.id;
+  const id = itemOf(target.id);
   if (!PLACEABLE.includes(id)) return;
   const at = hotbar.indexOf(id);
   if (at >= 0) selectSlot(at);
@@ -403,7 +492,10 @@ function updateTarget() {
   player.lookDir(tmpDir);
   target = world.raycast(tmpEye, tmpDir, REACH);
   highlight.visible = !!target;
-  if (target) highlight.position.set(target.x + 0.5, target.y + 0.5, target.z + 0.5);
+  if (!target) return;
+  const b = target.box || [0, 0, 0, 1, 1, 1];
+  highlight.scale.set(b[3] - b[0], b[4] - b[1], b[5] - b[2]);
+  highlight.position.set(target.x + (b[0] + b[3]) / 2, target.y + (b[1] + b[4]) / 2, target.z + (b[2] + b[5]) / 2);
 }
 
 // ------------------------------------------------------------------ world lifecycle
@@ -686,6 +778,7 @@ let fpsFrames = 0, fpsTime = 0, fps = 0;
 
 function updateGame(dt) {
   const look = input.consumeLook();
+  if (sleeping) return;
   player.yaw -= look.dx;
   player.pitch = Math.max(-1.55, Math.min(1.55, player.pitch - look.dy));
 
@@ -707,7 +800,7 @@ function updateGame(dt) {
   breakCooldown -= dt;
   placeCooldown -= dt;
   if (input.breaking && breakCooldown <= 0) { breakBlock(); breakCooldown = 0.25; }
-  if (input.placing && placeCooldown <= 0) { placeBlock(); placeCooldown = 0.25; }
+  if (input.placing && placeCooldown <= 0) { placeBlock(true); placeCooldown = 0.25; }
 
   if (player.onGround && player.walkDist - lastStep > 2.2) { lastStep = player.walkDist; sfx.step(); }
   if (player.inWater && !wasInWater && player.vel.y < -4) sfx.splash();
@@ -764,4 +857,5 @@ window.blockscraft = {
   get world() { return world; }, get player() { return player; }, get state() { return state; }, get target() { return target; },
   breakBlock, placeBlock,
   setTime(t) { dayTime = t; },
+  get dayTime() { return dayTime; }, get spawn() { return spawn; }, selectSlot, updateTarget,
 };

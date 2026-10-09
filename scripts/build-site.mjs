@@ -17,7 +17,6 @@ cpSync('www', 'dist/play', { recursive: true });
 const SKY = [126, 200, 242];
 writeFileSync('dist/icon-32.png', paintBlock(32, 32, { bg: SKY, rounded: true, blockFrac: 0.86 }));
 writeFileSync('dist/icon-192.png', paintBlock(192, 192, { bg: SKY, rounded: true, blockFrac: 0.72 }));
-writeFileSync('dist/play/icon-192.png', paintBlock(192, 192, { bg: SKY, rounded: true, blockFrac: 0.72 }));
 
 // Bundle the latest APK. If GitHub can't be reached, fall back to linking to it.
 let apkUrl = GITHUB_APK;

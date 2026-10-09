@@ -1,6 +1,6 @@
 // Chunked voxel world: terrain generation, block storage, meshing and raycasts.
 import * as THREE from 'three';
-import { B, BLOCKS, IS_OPAQUE, IS_SOLID, RENDER, ATLAS_COLS, ATLAS_ROWS } from './blocks.js';
+import { B, BLOCKS, BOXES, IS_OPAQUE, IS_SOLID, RENDER, ATLAS_COLS, ATLAS_ROWS } from './blocks.js';
 import { Simplex, hash2, hash3 } from './noise.js';
 
 export const CS = 16; // chunk size (x/z)
@@ -47,7 +47,7 @@ const FACES = [];
       const dv = (c.p[va] ? 1 : -1) * pstride[va];
       return [nOff + du, nOff + dv, nOff + du + dv];
     });
-    FACES.push({ n, corners, nOff, ao, tile: f === 2 ? 0 : f === 3 ? 1 : 2 });
+    FACES.push({ n, a, s, ua, va, corners, nOff, ao, tile: f === 2 ? 0 : f === 3 ? 1 : 2 });
   }
 }
 
@@ -58,6 +58,61 @@ function tileUV(tile, u, v) {
   u = EPS + u * (1 - 2 * EPS);
   v = EPS + v * (1 - 2 * EPS);
   return [(col + u) / ATLAS_COLS, 1 - (row + 1 - v) / ATLAS_ROWS];
+}
+
+// Rotates a top-face texture coordinate so +v points along `facing` (beds).
+function rotateTop(u, v, facing) {
+  switch (facing) {
+    case 0: return [1 - u, 1 - v]; // -Z
+    case 1: return [1 - v, u]; // +X
+    case 3: return [v, 1 - u]; // -X
+    default: return [u, v]; // +Z
+  }
+}
+
+// Emits the six faces of a sub-block box (doors, beds). Faces on the cell
+// boundary are skipped when a full opaque block covers them.
+function emitBox(buf, x, y, z, box, def, pad, pi) {
+  for (let f = 0; f < 6; f++) {
+    const face = FACES[f];
+    const onEdge = face.s ? box[3 + face.a] === 1 : box[face.a] === 0;
+    if (onEdge && IS_OPAQUE[pad[pi + face.nOff]]) continue;
+    const tile = def.tiles[face.tile];
+    const l = FACE_SHADE[f];
+    const base = buf.count;
+    for (let c = 0; c < 4; c++) {
+      const p = face.corners[c].p;
+      const px = p[0] ? box[3] : box[0], py = p[1] ? box[4] : box[1], pz = p[2] ? box[5] : box[2];
+      buf.pos.push(x + px, y + py, z + pz);
+      let u = p[face.ua] ? box[3 + face.ua] : box[face.ua];
+      let v = p[face.va] ? box[3 + face.va] : box[face.va];
+      if (f === 2 && def.topFacing !== undefined) [u, v] = rotateTop(u, v, def.topFacing);
+      const [tu, tv] = tileUV(tile, u, v);
+      buf.uv.push(tu, tv);
+      buf.col.push(l, l, l);
+    }
+    buf.ind.push(base, base + 1, base + 2, base, base + 2, base + 3);
+    buf.count += 4;
+  }
+}
+
+// Ray vs axis-aligned box (slab test). Returns entry distance + face normal, or null.
+function rayBox(o, d, x0, y0, z0, x1, y1, z1) {
+  let tmin = -Infinity, tmax = Infinity, nx = 0, ny = 0, nz = 0;
+  const lo = [x0, y0, z0], hi = [x1, y1, z1], oo = [o.x, o.y, o.z], dd = [d.x, d.y, d.z];
+  for (let a = 0; a < 3; a++) {
+    if (Math.abs(dd[a]) < 1e-9) {
+      if (oo[a] < lo[a] || oo[a] > hi[a]) return null;
+      continue;
+    }
+    let t0 = (lo[a] - oo[a]) / dd[a], t1 = (hi[a] - oo[a]) / dd[a];
+    let sign = -1;
+    if (t0 > t1) { const t = t0; t0 = t1; t1 = t; sign = 1; }
+    if (t0 > tmin) { tmin = t0; nx = ny = nz = 0; if (a === 0) nx = sign; else if (a === 1) ny = sign; else nz = sign; }
+    if (t1 < tmax) tmax = t1;
+    if (tmin > tmax || tmax < 0) return null;
+  }
+  return { t: Math.max(tmin, 0), nx, ny, nz };
 }
 
 class MeshBuffer {
@@ -277,6 +332,10 @@ export class World {
           const render = RENDER[id];
           const tiles = BLOCKS[id].tiles;
           const buf = bufs[render];
+          if (BOXES[id]) {
+            for (const box of BOXES[id]) emitBox(buf, x, y, z, box, BLOCKS[id], pad, pi);
+            continue;
+          }
           const liquid = render === 'liquid';
           const waterTop = liquid && pad[pi + PXZ] !== B.WATER;
 
@@ -422,7 +481,15 @@ export class World {
     let nx = 0, ny = 0, nz = 0, t = 0;
     while (t <= maxDist) {
       const id = this.getBlock(x, y, z);
-      if (id !== B.AIR && id !== B.WATER) return { x, y, z, id, nx, ny, nz };
+      if (id !== B.AIR && id !== B.WATER) {
+        const boxes = BOXES[id];
+        if (!boxes) return { x, y, z, id, nx, ny, nz, box: null };
+        // Shaped block: only count it if the ray actually hits one of its boxes.
+        for (const b of boxes) {
+          const hit = rayBox(origin, dir, x + b[0], y + b[1], z + b[2], x + b[3], y + b[4], z + b[5]);
+          if (hit && hit.t <= maxDist) return { x, y, z, id, nx: hit.nx, ny: hit.ny, nz: hit.nz, box: b };
+        }
+      }
       if (tmx < tmy && tmx < tmz) { x += sx; t = tmx; tmx += tdx; nx = -sx; ny = 0; nz = 0; }
       else if (tmy < tmz) { y += sy; t = tmy; tmy += tdy; nx = 0; ny = -sy; nz = 0; }
       else { z += sz; t = tmz; tmz += tdz; nx = 0; ny = 0; nz = -sz; }

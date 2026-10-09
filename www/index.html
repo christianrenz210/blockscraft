@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
   <meta name="theme-color" content="#000000">
-  <link rel="icon" type="image/png" href="icon-192.png">
+  <link rel="icon" type="image/png" href="lib/icon-192.png">
   <title>BlocksCraft</title>
   <link rel="stylesheet" href="style.css">
   <script type="importmap">
@@ -17,6 +17,7 @@
   <!-- In-game HUD -->
   <div id="hud" class="hidden">
     <div id="underwater"></div>
+    <div id="sleep"></div>
     <div id="crosshair"></div>
     <div id="debug" class="hidden"></div>
     <div id="toast"></div>
@@ -100,6 +101,8 @@
           <li>&#9650;: jump / swim / fly up</li>
           <li>FLY: toggle flying</li>
           <li>&#8943;: choose blocks</li>
+          <li>Tap a door to open/close it</li>
+          <li>Tap a bed at night to sleep</li>
         </ul>
       </div>
       <div>
@@ -111,6 +114,7 @@
           <li>Middle click: pick block</li>
           <li>1-9 / wheel: select &middot; E: blocks</li>
           <li>F or double Space: fly &middot; Shift: fly down</li>
+          <li>Right click a door: open/close &middot; a bed: sleep</li>
           <li>Esc: pause &middot; F3: debug info</li>
         </ul>
       </div>

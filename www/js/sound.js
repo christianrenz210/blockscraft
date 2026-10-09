@@ -40,5 +40,6 @@ export const sfx = {
   place() { burst({ freq: 380, q: 1.2, dur: 0.1, vol: 0.55, type: 'lowpass' }); },
   step() { burst({ freq: 600, q: 1.5, dur: 0.06, vol: 0.12 }); },
   splash() { burst({ freq: 1400, q: 0.5, dur: 0.35, vol: 0.25, pitchDrop: 0.3 }); },
+  door() { burst({ freq: 260, q: 2, dur: 0.16, vol: 0.6, type: 'lowpass', pitchDrop: 0.6 }); },
   click() { burst({ freq: 2500, q: 4, dur: 0.04, vol: 0.2 }); },
 };

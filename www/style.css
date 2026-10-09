@@ -47,6 +47,8 @@ html, body {
 
 #underwater { position: absolute; inset: 0; background: rgba(20, 60, 160, 0.35); display: none; }
 #underwater.on { display: block; }
+#sleep { position: absolute; inset: 0; background: #000; opacity: 0; transition: opacity 1.1s ease; }
+#sleep.on { opacity: 1; }
 
 #debug {
   position: absolute; left: calc(8px + var(--safe-l)); top: 8px;
