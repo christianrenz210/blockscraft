@@ -8,6 +8,7 @@ A blocky 3D sandbox game for Android phones and the web: explore, break blocks, 
 - Day/night cycle, clouds, water you can swim in, flying, break particles, sound effects
 - Touch controls (joystick and buttons) on phones; keyboard and mouse on PC
 - Auto-save: your world is kept on the device
+- Admin announcements: log in from **Settings → Admin** and send a message that pops up for everyone playing
 
 **Website (download the APK or play in your browser):** https://blockscraft.vercel.app  
 **Play directly:** https://blockscraft.vercel.app/play/  
@@ -82,6 +83,19 @@ Then open http://localhost:8081.
 | Tap a door / bed | Right click a door / bed | Open/close the door · sleep (at night) and set spawn |
 | ❚❚ / Back button | Esc | Pause |
 
+## Admin announcements
+
+Settings → **Admin** opens the admin login. After logging in you can send an
+announcement (up to 300 characters); every open copy of the game (website and
+APK) shows it in a pop-up within a few seconds. You can also change the admin
+password there.
+
+How it works: the game talks to the website's API (`api/`), which keeps the
+Supabase key in Vercel environment variables (`SUPABASE_URL`, `SUPABASE_KEY`).
+The admin password is stored only as a bcrypt hash in Supabase and is checked
+by the database on every request, with a limit on failed attempts. The
+database setup is in `supabase/blockscraft_announcements.sql`.
+
 ## Project layout
 
 ```
@@ -93,6 +107,8 @@ www/                 the game (HTML/CSS/JS), served at /play/ on the website
   js/blocks.js       block list (add new blocks here)
   js/textures.js     pixel-art textures painted in code
   js/input.js        keyboard/mouse + touch controls
+api/                 website API: announcements + admin (runs on Vercel)
+supabase/            database setup for announcements
 scripts/
   copy-libs.mjs      copies three.js into www/lib
   build-site.mjs     builds the website into dist/ (Vercel runs this)

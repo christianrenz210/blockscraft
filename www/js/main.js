@@ -11,6 +11,7 @@ import { Input, isTouchDevice } from './input.js';
 import { initAudio, sfx, setSoundEnabled, playBlockSound, measureSound } from './sound.js';
 import { seedFromString } from './noise.js';
 import * as store from './storage.js';
+import { listenForAnnouncements, adminLogin, sendAnnouncement, changeAdminPassword } from './online.js';
 
 // Colors are used exactly as painted (no sRGB conversion) for a crisp retro look.
 THREE.ColorManagement.enabled = false;
@@ -268,7 +269,7 @@ const input = new Input(canvas, {
 });
 
 // ------------------------------------------------------------------ screens
-const SCREENS = ['menu', 'new-world', 'settings', 'help', 'pause', 'inventory', 'loading'];
+const SCREENS = ['menu', 'new-world', 'settings', 'help', 'pause', 'inventory', 'loading', 'admin'];
 function showScreen(name) {
   for (const s of SCREENS) $(s).classList.toggle('hidden', s !== name);
   const inGame = state === 'playing' || state === 'paused' || state === 'inventory';
@@ -715,6 +716,106 @@ click('btn-resume', resumeGame);
 click('btn-pause-settings', () => { settingsReturn = 'pause'; syncSettingsUI(); showScreen('settings'); });
 click('btn-quit', quitToTitle);
 click('btn-inv-close', closeInventory);
+
+// ------------------------------------------------------------------ admin panel
+// The password is kept in memory only while logged in; every request is
+// checked again by the server.
+let adminSession = null;
+
+function setMsg(id, text, kind) {
+  const el = $(id);
+  el.textContent = text;
+  el.className = 'admin-msg' + (kind ? ' ' + kind : '');
+}
+
+function showAdmin() {
+  $('admin-login').classList.toggle('hidden', !!adminSession);
+  $('admin-panel').classList.toggle('hidden', !adminSession);
+  showScreen('admin');
+}
+
+async function busy(buttonId, work) {
+  const btn = $(buttonId);
+  if (btn.disabled) return;
+  btn.disabled = true;
+  try { await work(); } finally { btn.disabled = false; }
+}
+
+click('btn-admin', () => { setMsg('admin-login-msg', ''); setMsg('announce-msg', ''); showAdmin(); });
+click('btn-admin-back', () => showScreen('settings'));
+click('btn-admin-back2', () => showScreen('settings'));
+click('btn-admin-login', () => busy('btn-admin-login', async () => {
+  const username = $('admin-user').value.trim(), password = $('admin-pass').value;
+  if (!username || !password) { setMsg('admin-login-msg', 'Enter your username and password.', 'error'); return; }
+  setMsg('admin-login-msg', 'Logging in...');
+  try {
+    await adminLogin(username, password);
+    adminSession = { username, password };
+    $('admin-pass').value = '';
+    setMsg('admin-login-msg', '');
+    showAdmin();
+  } catch (e) {
+    setMsg('admin-login-msg', e.message, 'error');
+  }
+}));
+$('admin-pass').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('btn-admin-login').click(); });
+$('announce-text').addEventListener('input', () => { $('announce-count').textContent = $('announce-text').value.length; });
+click('btn-announce', () => busy('btn-announce', async () => {
+  const message = $('announce-text').value.trim();
+  if (!message) { setMsg('announce-msg', 'Type a message first.', 'error'); return; }
+  setMsg('announce-msg', 'Sending...');
+  try {
+    await sendAnnouncement(adminSession.username, adminSession.password, message);
+    $('announce-text').value = '';
+    $('announce-count').textContent = '0';
+    setMsg('announce-msg', 'Sent! Everyone playing will see it in a few seconds.', 'ok');
+  } catch (e) {
+    setMsg('announce-msg', e.message, 'error');
+  }
+}));
+click('btn-change-pass', () => busy('btn-change-pass', async () => {
+  const p1 = $('admin-newpass').value, p2 = $('admin-newpass2').value;
+  if (p1.length < 8) { setMsg('password-msg', 'Use at least 8 characters.', 'error'); return; }
+  if (p1 !== p2) { setMsg('password-msg', 'The two passwords do not match.', 'error'); return; }
+  setMsg('password-msg', 'Saving...');
+  try {
+    await changeAdminPassword(adminSession.username, adminSession.password, p1);
+    adminSession.password = p1;
+    $('admin-newpass').value = $('admin-newpass2').value = '';
+    setMsg('password-msg', 'Password changed.', 'ok');
+  } catch (e) {
+    setMsg('password-msg', e.message, 'error');
+  }
+}));
+click('btn-admin-logout', () => { adminSession = null; setMsg('admin-login-msg', 'Logged out.'); showAdmin(); });
+
+// ------------------------------------------------------------------ announcements
+const announcementQueue = [];
+let pausedForAnnouncement = false;
+
+function showNextAnnouncement() {
+  const next = announcementQueue[0];
+  $('announcement-text').textContent = next.text;
+  const t = next.time ? new Date(next.time) : new Date();
+  $('announcement-time').textContent = 'From the admin · ' + t.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+  $('announcement').classList.remove('hidden');
+  sfx.announce();
+}
+
+function onAnnouncement(text, time) {
+  announcementQueue.push({ text, time });
+  if (announcementQueue.length > 1) return; // already showing one
+  if (state === 'playing') { pauseGame(); pausedForAnnouncement = true; }
+  showNextAnnouncement();
+}
+
+click('btn-announcement-ok', () => {
+  announcementQueue.shift();
+  if (announcementQueue.length) { showNextAnnouncement(); return; }
+  $('announcement').classList.add('hidden');
+  if (pausedForAnnouncement && state === 'paused') resumeGame();
+  pausedForAnnouncement = false;
+});
 $('btn-inv').addEventListener('click', () => { if (state === 'playing') openInventory(); });
 
 document.addEventListener('pointerlockchange', () => {
@@ -872,6 +973,7 @@ function frame(now) {
 }
 
 // ------------------------------------------------------------------ boot
+listenForAnnouncements(onAnnouncement);
 // In the browser (not the Android app) link back to the website's download page.
 if (!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform())) {
   $('site-link').classList.remove('hidden');
@@ -888,6 +990,7 @@ window.blockscraft = {
   get world() { return world; }, get player() { return player; }, get state() { return state; }, get target() { return target; },
   breakBlock, placeBlock,
   setTime(t) { dayTime = t; },
+  onAnnouncement,
   measureSound,
   get dayTime() { return dayTime; }, get spawn() { return spawn; }, selectSlot, updateTarget,
 };

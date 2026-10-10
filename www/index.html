@@ -101,6 +101,7 @@
       <label class="check"><input id="set-fps" type="checkbox"> Show FPS / position</label>
     </div>
     <div class="menu-buttons">
+      <button id="btn-admin" class="mbtn">Admin</button>
       <button id="btn-settings-done" class="mbtn">Done</button>
     </div>
   </div>
@@ -162,6 +163,62 @@
       <div id="inv-grid"></div>
       <div class="inv-hint">Pick a hotbar slot below, then tap a block to put it there.</div>
       <div id="inv-hotbar"></div>
+    </div>
+  </div>
+
+  <!-- Admin -->
+  <div id="admin" class="screen dirt hidden">
+    <div id="admin-login" class="admin-box">
+      <h2>Admin Login</h2>
+      <label class="field">Username
+        <input id="admin-user" type="text" maxlength="50" value="admin" autocomplete="username" autocapitalize="off" spellcheck="false">
+      </label>
+      <label class="field">Password
+        <input id="admin-pass" type="password" maxlength="200" autocomplete="current-password">
+      </label>
+      <p id="admin-login-msg" class="admin-msg"></p>
+      <div class="menu-buttons">
+        <button id="btn-admin-login" class="mbtn">Log In</button>
+        <button id="btn-admin-back" class="mbtn">Back</button>
+      </div>
+    </div>
+    <div id="admin-panel" class="admin-box hidden">
+      <h2>Admin Panel</h2>
+      <label class="field">Announcement to all players online
+        <textarea id="announce-text" maxlength="300" rows="3" placeholder="Type your message..."></textarea>
+        <span class="counter"><span id="announce-count">0</span>/300</span>
+      </label>
+      <p id="announce-msg" class="admin-msg"></p>
+      <div class="menu-buttons">
+        <button id="btn-announce" class="mbtn">Send Announcement</button>
+      </div>
+      <details class="admin-details">
+        <summary>Change password</summary>
+        <label class="field">New password (8+ characters)
+          <input id="admin-newpass" type="password" maxlength="200" autocomplete="new-password">
+        </label>
+        <label class="field">Repeat new password
+          <input id="admin-newpass2" type="password" maxlength="200" autocomplete="new-password">
+        </label>
+        <p id="password-msg" class="admin-msg"></p>
+        <div class="menu-buttons">
+          <button id="btn-change-pass" class="mbtn">Change Password</button>
+        </div>
+      </details>
+      <div class="menu-buttons">
+        <button id="btn-admin-logout" class="mbtn">Log Out</button>
+        <button id="btn-admin-back2" class="mbtn">Back</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Announcement from the admin -->
+  <div id="announcement" class="modal hidden" role="alertdialog" aria-labelledby="announcement-title">
+    <div class="modal-box">
+      <div id="announcement-title" class="modal-title">&#128226; Announcement</div>
+      <p id="announcement-text" class="modal-text"></p>
+      <p id="announcement-time" class="modal-time"></p>
+      <button id="btn-announcement-ok" class="mbtn">OK</button>
     </div>
   </div>
 

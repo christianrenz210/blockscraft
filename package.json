@@ -2,6 +2,7 @@
   "name": "blockscraft",
   "version": "1.0.0",
   "private": true,
+  "type": "module",
   "description": "BlocksCraft - a blocky sandbox game (Three.js + Capacitor)",
   "scripts": {
     "build": "node scripts/copy-libs.mjs",

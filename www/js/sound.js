@@ -160,6 +160,11 @@ export const sfx = {
     grain({ freq: 1400, q: 0.5, dur: 0.35, vol: 0.45, drop: 0.3 });
     RECIPES.water(0.8, 0.8);
   },
+  announce() {
+    if (!ctx || !enabled) return;
+    tone({ freq: 784, dur: 0.18, vol: 0.25, type: 'triangle' });
+    tone({ at: 0.14, freq: 1175, dur: 0.35, vol: 0.25, type: 'triangle' });
+  },
   click() {
     if (!ctx || !enabled) return;
     grain({ freq: 2500, q: 4, dur: 0.04, vol: 0.35 });

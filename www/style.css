@@ -187,3 +187,34 @@ h3 { margin: 0 0 6px; text-shadow: var(--text-shadow); }
 .inv-hint { font-size: 13px; }
 #inv-hotbar .slot { background: #8b8b8b; }
 #inv-hotbar .slot.selected { background: #b8b8b8; }
+
+/* ------------------------------------------------------------- admin */
+.admin-box { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+.field input[type="password"], .field textarea {
+  font: 16px var(--pixel-font); padding: 10px; background: #000; color: #fff; border: 2px solid #a0a0a0;
+  user-select: text; -webkit-user-select: text; width: 100%;
+}
+.field textarea { resize: vertical; min-height: 80px; font-family: var(--ui-font); }
+.counter { align-self: flex-end; font-size: 12px; font-weight: normal; opacity: 0.8; }
+.admin-msg { margin: 0; min-height: 1.2em; font-weight: bold; text-shadow: var(--text-shadow); max-width: min(380px, 86vw); text-align: center; }
+.admin-msg.error { color: #ff6b6b; }
+.admin-msg.ok { color: #7dff7d; }
+.admin-details { width: min(380px, 86vw); text-shadow: var(--text-shadow); }
+.admin-details summary { cursor: pointer; font-weight: bold; margin-bottom: 10px; }
+.admin-details .field { margin-bottom: 10px; }
+
+/* Announcement pop-up (above every other screen) */
+.modal {
+  position: fixed; inset: 0; z-index: 60; background: rgba(0, 0, 0, 0.55);
+  display: flex; align-items: center; justify-content: center; padding: 16px;
+}
+.modal-box {
+  width: min(460px, 92vw); background: #c6c6c6; color: #2b2b2b; border: 3px solid #000;
+  box-shadow: inset 3px 3px 0 #fff, inset -3px -3px 0 #555; padding: 16px 18px;
+  display: flex; flex-direction: column; gap: 10px; animation: pop 0.18s ease-out;
+}
+.modal-title { font: bold 18px var(--pixel-font); color: #8a5a00; }
+.modal-text { margin: 0; font-size: 18px; line-height: 1.4; white-space: pre-wrap; word-wrap: break-word; user-select: text; -webkit-user-select: text; }
+.modal-time { margin: 0; font-size: 12px; color: #555; }
+.modal-box .mbtn { align-self: flex-end; min-width: 110px; }
+@keyframes pop { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
