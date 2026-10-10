@@ -1,5 +1,5 @@
 // Chunked voxel world: terrain generation, block storage, meshing and raycasts.
-import * as THREE from 'three';
+import * as THREE from '../lib/three.module.min.js';
 import { B, BLOCKS, BOXES, IS_OPAQUE, IS_SOLID, RENDER, ATLAS_COLS, ATLAS_ROWS } from './blocks.js';
 import { Simplex, hash2, hash3 } from './noise.js';
 

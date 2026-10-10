@@ -1,5 +1,5 @@
 // First-person player: movement, AABB-vs-voxel collision, swimming and flying.
-import * as THREE from 'three';
+import * as THREE from '../lib/three.module.min.js';
 import { B, IS_SOLID, boxesOf } from './blocks.js';
 
 const HALF_W = 0.3;

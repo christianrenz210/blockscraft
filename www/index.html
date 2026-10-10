@@ -7,8 +7,25 @@
   <link rel="icon" type="image/png" href="lib/icon-192.png">
   <title>BlocksCraft</title>
   <link rel="stylesheet" href="style.css">
-  <script type="importmap">
-    { "imports": { "three": "./lib/three.module.min.js" } }
+  <script>
+    // If the game script fails to start, say so on screen instead of leaving
+    // menu buttons that silently do nothing.
+    (function () {
+      function show(msg) {
+        var el = document.getElementById('load-error');
+        if (!el) { document.addEventListener('DOMContentLoaded', function () { show(msg); }); return; }
+        if (/webgl/i.test(msg)) msg = '3D graphics (WebGL) are turned off on this device. If Lockdown Mode is on, turn it off for this site, then reload.';
+        el.textContent = 'The game could not start: ' + msg;
+        el.style.display = 'block';
+      }
+      window.addEventListener('error', function (e) { if (!window.blockscraft) show(e.message || 'script error'); });
+      window.addEventListener('unhandledrejection', function (e) { if (!window.blockscraft) show(String(e.reason)); });
+      window.addEventListener('load', function () {
+        setTimeout(function () {
+          if (!window.blockscraft) show('this browser is not supported. Please update to the latest iOS/Safari, or try Chrome.');
+        }, 5000);
+      });
+    })();
   </script>
 </head>
 <body>
@@ -44,6 +61,7 @@
   <div id="menu" class="screen dirt">
     <h1 class="logo">Blocks<span>Craft</span></h1>
     <p class="tagline" id="tagline">Build anything!</p>
+    <p id="load-error" class="load-error"></p>
     <div class="menu-buttons">
       <button id="btn-continue" class="mbtn">Continue World</button>
       <button id="btn-new" class="mbtn">New World</button>

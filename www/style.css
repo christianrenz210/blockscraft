@@ -162,6 +162,10 @@ h3 { margin: 0 0 6px; text-shadow: var(--text-shadow); }
 .check input { width: 22px; height: 22px; accent-color: #6fc04a; }
 .settings-list { display: flex; flex-direction: column; gap: 12px; width: min(380px, 86vw); }
 .warn { color: #ff6b6b; font-weight: bold; margin: 0; }
+.load-error {
+  display: none; margin: 0; max-width: min(520px, 90vw); padding: 10px 14px; text-align: center;
+  background: rgba(120, 0, 0, 0.8); border: 2px solid #ff6b6b; font-weight: bold; user-select: text; -webkit-user-select: text;
+}
 
 .help-cols { display: flex; gap: 28px; flex-wrap: wrap; justify-content: center; max-width: 760px; }
 .help-cols ul { margin: 0; padding-left: 18px; line-height: 1.6; }

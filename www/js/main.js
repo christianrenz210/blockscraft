@@ -1,5 +1,5 @@
 // BlocksCraft - entry point: renderer, game loop, menus and HUD.
-import * as THREE from 'three';
+import * as THREE from '../lib/three.module.min.js';
 import {
   B, BLOCKS, PLACEABLE, DEFAULT_HOTBAR, T, IS_SOLID, ATLAS_COLS, FACING_DIRS, facingFromYaw,
   isDoor, isBed, doorId, doorFacing, doorOpen, doorUpper, bedId, bedFacing, bedHead, itemOf,
