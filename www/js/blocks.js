@@ -19,7 +19,7 @@ export const B = {
   CLOTH_RED: 17, CLOTH_BLUE: 18, CLOTH_YELLOW: 19, CLOTH_WHITE: 20, CLOTH_BLACK: 21,
   BOOKSHELF: 22, CACTUS: 23, GRAVEL: 24, STONE_BRICK: 25, GOLD_BLOCK: 26, PUMPKIN: 27,
   // Multi-state blocks: the item id is the first variant of each range.
-  DOOR: 64, // 64..79 = 64 + upper*8 + open*4 + facing
+  DOOR: 64, // 64..79 = 64 + upper*8 + open*4 + facing; mirrored doors use 104..119
   BED: 80, // 80..87 = 80 + head*4 + facing
 };
 
@@ -31,12 +31,18 @@ export function facingFromYaw(yaw) {
   return dz > 0 ? 2 : 0;
 }
 
-export const isDoor = (id) => id >= 64 && id < 80;
+// Mirrored doors hinge on the other side, so two doors side by side make a double door.
+export const isDoor = (id) => (id >= 64 && id < 80) || (id >= 104 && id < 120);
 export const isBed = (id) => id >= 80 && id < 88;
-export const doorId = (facing, open, upper) => 64 + (upper ? 8 : 0) + (open ? 4 : 0) + facing;
-export const doorFacing = (id) => (id - 64) & 3;
-export const doorOpen = (id) => ((id - 64) & 4) !== 0;
-export const doorUpper = (id) => ((id - 64) & 8) !== 0;
+const doorBase = (id) => (id >= 104 ? 104 : 64);
+export const doorId = (facing, open, upper, mirror = false) =>
+  (mirror ? 104 : 64) + (upper ? 8 : 0) + (open ? 4 : 0) + facing;
+export const doorFacing = (id) => (id - doorBase(id)) & 3;
+export const doorOpen = (id) => ((id - doorBase(id)) & 4) !== 0;
+export const doorUpper = (id) => ((id - doorBase(id)) & 8) !== 0;
+export const doorMirror = (id) => id >= 104;
+// Direction (from the door's cell) of a normal door's hinge side.
+export const doorHingeDir = (facing) => FACING_DIRS[(facing + 1) % 4];
 export const bedId = (facing, head) => 80 + (head ? 4 : 0) + facing;
 export const bedFacing = (id) => (id - 80) & 3;
 export const bedHead = (id) => ((id - 80) & 4) !== 0;
@@ -93,13 +99,19 @@ function doorPanel(facing) {
     [0, 0, 0, DOOR_T, 1, 1],
   ][facing];
 }
-for (let upper = 0; upper < 2; upper++) {
-  for (let open = 0; open < 2; open++) {
-    for (let f = 0; f < 4; f++) {
-      const d = def('Door', T.PLANKS, T.PLANKS, upper ? T.DOOR_TOP : T.DOOR_BOTTOM, { render: 'cutout' });
-      // An open door swings 90 degrees around its hinge corner.
-      d.boxes = [doorPanel(open ? (f + 1) % 4 : f)];
-      BLOCKS[doorId(f, open, upper)] = d;
+// Hinge corner (x, z) in the cell for a normal door of each facing.
+const HINGE = [[1, 0], [1, 1], [0, 1], [0, 0]];
+for (let mirror = 0; mirror < 2; mirror++) {
+  for (let upper = 0; upper < 2; upper++) {
+    for (let open = 0; open < 2; open++) {
+      for (let f = 0; f < 4; f++) {
+        const d = def('Door', T.PLANKS, T.PLANKS, upper ? T.DOOR_TOP : T.DOOR_BOTTOM, { render: 'cutout' });
+        // An open door swings 90 degrees around its hinge corner.
+        const swung = mirror ? (f + 3) % 4 : (f + 1) % 4;
+        d.boxes = [doorPanel(open ? swung : f)];
+        d.hinge = mirror ? HINGE[(f + 3) % 4] : HINGE[f];
+        BLOCKS[doorId(f, open, upper, mirror)] = d;
+      }
     }
   }
 }

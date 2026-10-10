@@ -231,22 +231,46 @@ export function createAtlas() {
     else set(T.PUMPKIN_TOP, x, y, [222, 135, 30], (1 - Math.abs(Math.sin(Math.atan2(y - 7.5, x - 7.5) * 4)) * 0.15) * vary(0.08));
   }
 
-  // --- Door (bottom half has the knob, top half has two windows) ---
-  const DOOR = [160, 118, 68];
-  const FRAME = [110, 78, 42];
-  for (const tile of [T.DOOR_BOTTOM, T.DOOR_TOP]) {
-    const top = tile === T.DOOR_TOP;
+  // --- Door: oak frame, 2x2 glass windows on top, recessed panels below.
+  // Hinges are drawn on the left edge (u = 0) and the handle on the right;
+  // the mesher flips each door so the hinges sit on its real hinge side.
+  const D_OUT = [92, 66, 36];
+  const D_FRAME = [178, 140, 84];
+  const D_PANEL = [158, 120, 68];
+  const D_SHADOW = [118, 86, 46];
+  const D_LIGHT = [206, 170, 110];
+  const IRON = [112, 112, 118];
+  const IRON_HI = [176, 176, 182];
+  // Rectangles are inclusive [x0, y0, x1, y1] within each 16x16 half.
+  const doorHalf = (tile, holes, panels) => {
     for (let y = 0; y < TILE; y++) for (let x = 0; x < TILE; x++) {
-      const frame = x < 2 || x > 13 || (top ? y < 2 : y > 13);
-      const brace = !top && (y === 6 || y === 7);
-      const window = top && y >= 3 && y <= 9 && ((x >= 3 && x <= 6) || (x >= 9 && x <= 12));
-      if (window) set(tile, x, y, [0, 0, 0], 1, 0);
-      else if (frame || brace) set(tile, x, y, FRAME, vary(0.1));
-      else set(tile, x, y, DOOR, vary(0.1) * (x % 4 === 1 ? 0.85 : 1));
+      const edge = x === 0 || x === 15 || (tile === T.DOOR_TOP ? y === 0 : y === 15);
+      set(tile, x, y, edge ? D_OUT : D_FRAME, vary(0.08) * (x % 5 === 2 ? 0.96 : 1));
     }
+    for (const [x0, y0, x1, y1] of holes) {
+      for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) set(tile, x, y, [0, 0, 0], 1, 0);
+      // Sunken window frame: dark above/left, light below/right.
+      for (let x = x0 - 1; x <= x1 + 1; x++) { set(tile, x, y0 - 1, D_SHADOW, vary(0.06)); set(tile, x, y1 + 1, D_LIGHT, vary(0.06)); }
+      for (let y = y0; y <= y1; y++) { set(tile, x0 - 1, y, D_SHADOW, vary(0.06)); set(tile, x1 + 1, y, D_LIGHT, vary(0.06)); }
+    }
+    for (const [x0, y0, x1, y1] of panels) {
+      for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) {
+        const c = y === y0 || x === x0 ? D_SHADOW : y === y1 || x === x1 ? D_LIGHT : D_PANEL;
+        set(tile, x, y, c, vary(0.07));
+      }
+    }
+  };
+  doorHalf(T.DOOR_TOP, [[3, 3, 6, 6], [9, 3, 12, 6], [3, 9, 6, 12], [9, 9, 12, 12]], []);
+  doorHalf(T.DOOR_BOTTOM, [], [[2, 1, 6, 4], [9, 1, 13, 4], [2, 6, 6, 9], [9, 6, 13, 9], [2, 11, 6, 14], [9, 11, 13, 14]]);
+  // Iron hinges on the left edge.
+  for (const [tile, y] of [[T.DOOR_TOP, 3], [T.DOOR_BOTTOM, 3], [T.DOOR_BOTTOM, 11]]) {
+    set(tile, 0, y, IRON_HI); set(tile, 1, y, IRON_HI);
+    set(tile, 0, y + 1, IRON); set(tile, 1, y + 1, IRON);
   }
-  set(T.DOOR_BOTTOM, 11, 1, [40, 40, 40]);
-  set(T.DOOR_BOTTOM, 11, 2, [70, 70, 70]);
+  // Handle near the middle of the right edge.
+  set(T.DOOR_TOP, 13, 15, IRON_HI); set(T.DOOR_TOP, 14, 15, IRON);
+  set(T.DOOR_BOTTOM, 13, 0, IRON); set(T.DOOR_BOTTOM, 14, 0, IRON);
+  set(T.DOOR_BOTTOM, 12, 1, IRON_HI); set(T.DOOR_BOTTOM, 12, 2, IRON);
 
   // --- Bed ---
   const BLANKET = [176, 40, 44];

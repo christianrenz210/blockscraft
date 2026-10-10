@@ -87,6 +87,8 @@ function emitBox(buf, x, y, z, box, def, pad, pi) {
       let u = p[face.ua] ? box[3 + face.ua] : box[face.ua];
       let v = p[face.va] ? box[3 + face.va] : box[face.va];
       if (f === 2 && def.topFacing !== undefined) [u, v] = rotateTop(u, v, def.topFacing);
+      // Doors: put the texture's hinge edge (u = 0) on the door's real hinge side.
+      if (def.hinge && f !== 2 && f !== 3 && def.hinge[face.ua === 0 ? 0 : 1] === 1) u = 1 - u;
       const [tu, tv] = tileUV(tile, u, v);
       buf.uv.push(tu, tv);
       buf.col.push(l, l, l);

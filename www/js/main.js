@@ -2,7 +2,7 @@
 import * as THREE from '../lib/three.module.min.js';
 import {
   B, BLOCKS, PLACEABLE, DEFAULT_HOTBAR, T, IS_SOLID, ATLAS_COLS, FACING_DIRS, facingFromYaw,
-  isDoor, isBed, doorId, doorFacing, doorOpen, doorUpper, bedId, bedFacing, bedHead, itemOf,
+  isDoor, isBed, doorId, doorFacing, doorOpen, doorUpper, doorMirror, doorHingeDir, bedId, bedFacing, bedHead, itemOf,
 } from './blocks.js';
 import { createAtlas, makeBlockIcon, tileDataURL, TILE } from './textures.js';
 import { World, CS, CH, SEA } from './world.js';
@@ -409,8 +409,12 @@ function placeBlock(repeat = false) {
   if (item === B.DOOR) {
     if (!canReplace(x, y + 1, z)) return;
     if (player.intersectsBlock(x, y, z) || player.intersectsBlock(x, y + 1, z)) return;
-    world.setBlock(x, y, z, doorId(facing, false, false));
-    world.setBlock(x, y + 1, z, doorId(facing, false, true));
+    // Next to a door facing the same way? Hinge on the far side to make a double door.
+    const [hx, hz] = doorHingeDir(facing);
+    const n = world.getBlock(x + hx, y, z + hz);
+    const mirror = isDoor(n) && doorFacing(n) === facing && !doorMirror(n);
+    world.setBlock(x, y, z, doorId(facing, false, false, mirror));
+    world.setBlock(x, y + 1, z, doorId(facing, false, true, mirror));
   } else if (item === B.BED) {
     const [dx, dz] = FACING_DIRS[facing];
     const hx = x + dx, hz = z + dz;
@@ -427,19 +431,41 @@ function placeBlock(repeat = false) {
   updateTarget();
 }
 
-function toggleDoor(x, y, z, id) {
-  const open = !doorOpen(id), f = doorFacing(id);
+// The other door of a double door (the neighbour on the handle side), or null.
+function doubleDoorPartner(x, y, z, id) {
+  const f = doorFacing(id), mirror = doorMirror(id);
+  const [hx, hz] = doorHingeDir(f);
+  const s = mirror ? 1 : -1; // handle side is opposite the hinge side
+  const px = x + hx * s, pz = z + hz * s;
+  const n = world.getBlock(px, y, pz);
+  if (isDoor(n) && doorFacing(n) === f && doorMirror(n) !== mirror && doorUpper(n) === doorUpper(id)) return [px, pz, n];
+  return null;
+}
+
+// Would the player be inside this door's closed panel?
+function blocksPlayerWhenClosed(x, lowerY, z, id) {
+  const b = BLOCKS[doorId(doorFacing(id), false, false, doorMirror(id))].boxes[0];
+  const p = player.pos, hw = 0.3;
+  return p.x + hw > x + b[0] && p.x - hw < x + b[3] && p.z + hw > z + b[2] && p.z - hw < z + b[5] &&
+    p.y < lowerY + 2 && p.y + 1.8 > lowerY;
+}
+
+function setDoorOpen(x, y, z, id, open) {
+  const f = doorFacing(id), mirror = doorMirror(id);
   const lowerY = doorUpper(id) ? y - 1 : y;
+  if (!open && blocksPlayerWhenClosed(x, lowerY, z, id)) return false;
+  if (isDoor(world.getBlock(x, lowerY, z))) world.setBlock(x, lowerY, z, doorId(f, open, false, mirror));
+  if (isDoor(world.getBlock(x, lowerY + 1, z))) world.setBlock(x, lowerY + 1, z, doorId(f, open, true, mirror));
+  return true;
+}
+
+function toggleDoor(x, y, z, id) {
+  const open = !doorOpen(id);
   // Don't swing the door shut on top of the player.
-  if (!open && (player.intersectsBlock(x, lowerY, z) || player.intersectsBlock(x, lowerY + 1, z))) {
-    const closedBox = BLOCKS[doorId(f, false, false)].boxes[0];
-    const p = player.pos;
-    const hw = 0.3;
-    if (p.x + hw > x + closedBox[0] && p.x - hw < x + closedBox[3] &&
-        p.z + hw > z + closedBox[2] && p.z - hw < z + closedBox[5]) return;
-  }
-  if (isDoor(world.getBlock(x, lowerY, z))) world.setBlock(x, lowerY, z, doorId(f, open, false));
-  if (isDoor(world.getBlock(x, lowerY + 1, z))) world.setBlock(x, lowerY + 1, z, doorId(f, open, true));
+  if (!setDoorOpen(x, y, z, id, open)) return;
+  // Double doors open and close together.
+  const partner = doubleDoorPartner(x, y, z, id);
+  if (partner && doorOpen(partner[2]) !== open) setDoorOpen(partner[0], y, partner[1], partner[2], open);
   sfx.door();
   updateTarget();
 }
