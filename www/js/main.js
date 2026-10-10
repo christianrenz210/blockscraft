@@ -8,7 +8,7 @@ import { createAtlas, makeBlockIcon, tileDataURL, TILE } from './textures.js';
 import { World, CS, CH, SEA } from './world.js';
 import { Player } from './player.js';
 import { Input, isTouchDevice } from './input.js';
-import { initAudio, sfx, setSoundEnabled } from './sound.js';
+import { initAudio, sfx, setSoundEnabled, playBlockSound, measureSound } from './sound.js';
 import { seedFromString } from './noise.js';
 import * as store from './storage.js';
 
@@ -381,7 +381,7 @@ function breakBlock() {
   world.setBlock(x, y, z, nearWater ? B.WATER : B.AIR);
   if (partner) world.setBlock(partner[0], partner[1], partner[2], B.AIR);
   spawnParticles(x, y, z, id);
-  sfx.break();
+  playBlockSound(BLOCKS[id].sound, 'break');
   updateTarget();
 }
 
@@ -423,7 +423,7 @@ function placeBlock(repeat = false) {
     if (IS_SOLID[item] && player.intersectsBlock(x, y, z)) return;
     world.setBlock(x, y, z, item);
   }
-  sfx.place();
+  playBlockSound(BLOCKS[item].sound, 'place');
   updateTarget();
 }
 
@@ -802,7 +802,12 @@ function updateGame(dt) {
   if (input.breaking && breakCooldown <= 0) { breakBlock(); breakCooldown = 0.25; }
   if (input.placing && placeCooldown <= 0) { placeBlock(true); placeCooldown = 0.25; }
 
-  if (player.onGround && player.walkDist - lastStep > 2.2) { lastStep = player.walkDist; sfx.step(); }
+  if (player.onGround && player.walkDist - lastStep > 1.8) {
+    lastStep = player.walkDist;
+    const p = player.pos;
+    const under = world.getBlock(Math.floor(p.x), Math.floor(p.y - 0.05), Math.floor(p.z));
+    if (under) playBlockSound(BLOCKS[under].sound, 'step');
+  }
   if (player.inWater && !wasInWater && player.vel.y < -4) sfx.splash();
   wasInWater = player.inWater;
 
@@ -857,5 +862,6 @@ window.blockscraft = {
   get world() { return world; }, get player() { return player; }, get state() { return state; }, get target() { return target; },
   breakBlock, placeBlock,
   setTime(t) { dayTime = t; },
+  measureSound,
   get dayTime() { return dayTime; }, get spawn() { return spawn; }, selectSlot, updateTarget,
 };

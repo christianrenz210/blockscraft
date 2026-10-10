@@ -112,6 +112,19 @@ for (let head = 0; head < 2; head++) {
   }
 }
 
+// Which family of dig/place/step sounds each block makes (see sound.js).
+const SOUND_MATERIAL = {
+  [B.GRASS]: 'grass', [B.LEAVES]: 'grass', [B.DIRT]: 'gravel', [B.GRAVEL]: 'gravel',
+  [B.SAND]: 'sand', [B.SNOW]: 'snow', [B.WATER]: 'water',
+  [B.LOG]: 'wood', [B.PLANKS]: 'wood', [B.BOOKSHELF]: 'wood', [B.PUMPKIN]: 'wood',
+  [B.GLASS]: 'glass', [B.GOLD_BLOCK]: 'metal',
+  [B.CLOTH_RED]: 'cloth', [B.CLOTH_BLUE]: 'cloth', [B.CLOTH_YELLOW]: 'cloth',
+  [B.CLOTH_WHITE]: 'cloth', [B.CLOTH_BLACK]: 'cloth', [B.CACTUS]: 'cloth',
+};
+for (let id = 1; id < BLOCKS.length; id++) {
+  if (BLOCKS[id]) BLOCKS[id].sound = SOUND_MATERIAL[id] || (isDoor(id) || isBed(id) ? 'wood' : 'stone');
+}
+
 // Blocks the player can pick from the inventory (creative mode).
 export const PLACEABLE = [
   B.GRASS, B.DIRT, B.STONE, B.COBBLE, B.PLANKS, B.LOG, B.BRICK, B.GLASS, B.SAND,
